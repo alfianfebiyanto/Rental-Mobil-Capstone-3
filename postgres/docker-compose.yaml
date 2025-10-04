@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:14
+    container_name: rental_postgres
+    ports:
+      - "5400:5432"
+    environment:
+      POSTGRES_DB: rental_mobil_db
+      POSTGRES_USER: admin_de
+      POSTGRES_PASSWORD: admin_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # pakai volume name
+
+volumes:
+  postgres_data:   # deklarasi volume di level paling bawah
+

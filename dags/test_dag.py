@@ -1,16 +1,14 @@
-from datetime import datetime, timedelta
 from airflow import DAG
+from airflow.operators.empty import EmptyOperator  # DummyOperator (deprecated)
 from airflow.operators.python import PythonOperator
-
-# Fungsi sederhana buat dites
-def print_hello():
-    print("🚀 Hello World from Airflow DAG!")
+from datetime import datetime, timedelta
+from insert_data import create_table, load_all, insert_batch
 
 # Default arguments
 default_args = {
     "owner": "alfian",
     "retries": 1,
-    "retry_delay": timedelta(minutes=1),
+    "retry_delay": timedelta(minutes=5),
 }
 
 # Definisi DAG
@@ -24,9 +22,24 @@ with DAG(
     tags=["test"],
 ) as dag:
 
-    task1 = PythonOperator(
-        task_id="print_hello_task",
-        python_callable=print_hello
+    start = EmptyOperator(task_id="start")
+
+    task_create_table = PythonOperator(
+        task_id="create_table",
+        python_callable=create_table
     )
 
-    task1
+    task_insert_batch = PythonOperator(
+        task_id="insert_batch",
+        python_callable=insert_batch
+    )
+
+    task_load_all = PythonOperator(
+        task_id="load_all",
+        python_callable=load_all
+    )
+
+    end = EmptyOperator(task_id="end")
+
+    # Definisi urutan task (pipeline)
+    start >> task_create_table >> task_insert_batch >> task_load_all >> end
