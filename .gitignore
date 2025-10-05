@@ -3,3 +3,5 @@ venv
 logs
 plugins
 z_data
+__pycache__
+__init__.py
