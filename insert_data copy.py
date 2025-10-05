@@ -2,6 +2,12 @@ import psycopg2
 import logging
 from src.generate_data import (generate_cars, generate_customers, generate_payments, generate_rentals)
 
+# logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s - %(message)s'
+)
+log = logging.getLogger()
 
 # setting connection
 def db_conn():
@@ -14,6 +20,7 @@ def db_conn():
     )
 
 def create_tables():
+    log.info("Creating tables...")
     conn = db_conn()
     tables = [
         """
@@ -65,23 +72,24 @@ def create_tables():
             for table in tables:
                cur.execute(table)
             conn.commit()
-            print('semua tabel sudah dibuat')
+            log.info('[SUCCESS] table successfuly create...')
     except Exception as e:
         conn.rollback()  # Rollback kalau ada error
-        print(f"❌ Error saat membuat tabel: {e}")
+        log.info(f"[ERROR] table {e}")
         raise  # Re-raise error supaya caller tahu ada masalah
     finally:
         conn.close()
         
         
 def insert_data():
+    log.info("Inserting data into table...")
     conn = db_conn()
     try:
         with conn.cursor() as cur:
             customers = generate_customers(50)
             cars = generate_cars(50)
             rentals = generate_rentals(customers,cars)
-            payments =generate_payments(rentals)
+            payments = generate_payments(rentals)
             
             # insert data customers
             for c in customers:
@@ -116,12 +124,12 @@ def insert_data():
                 """, (p["id"], p["rental_id"], p["days"], p["price"], p["method"], p["created_at"]))
 
             conn.commit()
-            print("✅ Semua data berhasil dimasukkan.")
+            log.info("[SUCCESSS] Inserting data into table")
     finally:
         conn.close()
         
-# --- main ---
-if __name__ == "__main__":
-    create_tables()
-    insert_data()
+# # --- main ---
+# if __name__ == "__main__":
+#     create_tables()
+#     insert_data()
     

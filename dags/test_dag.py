@@ -1,45 +1,40 @@
 from airflow import DAG
-from airflow.operators.empty import EmptyOperator  # DummyOperator (deprecated)
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
-from insert_data import create_table, load_all, insert_batch
 
-# Default arguments
+# import fungsi dari package src
+from src.insert_data import create_tables, insert_data
+
 default_args = {
     "owner": "alfian",
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
 }
 
-# Definisi DAG
 with DAG(
     dag_id="test_dag",
-    default_args=default_args,
-    description="DAG sederhana buat testing",
-    schedule_interval="@daily",   # jalan tiap hari
+    description="DAG testing produk ini",
+    schedule_interval="@daily",      # ok, atau ganti 'schedule' di Airflow baru
     start_date=datetime(2025, 10, 1),
-    catchup=False,  # biar gak nge-run backlog
+    catchup=False,
+    default_args=default_args,
     tags=["test"],
 ) as dag:
 
     start = EmptyOperator(task_id="start")
 
-    task_create_table = PythonOperator(
-        task_id="create_table",
-        python_callable=create_table
+    task_create_tables = PythonOperator(
+        task_id="create_tables",
+        python_callable=create_tables
     )
 
-    task_insert_batch = PythonOperator(
-        task_id="insert_batch",
-        python_callable=insert_batch
-    )
-
-    task_load_all = PythonOperator(
-        task_id="load_all",
-        python_callable=load_all
+    task_insert_data = PythonOperator(
+        task_id="insert_data",
+        python_callable=insert_data
     )
 
     end = EmptyOperator(task_id="end")
 
-    # Definisi urutan task (pipeline)
-    start >> task_create_table >> task_insert_batch >> task_load_all >> end
+    # pipeline
+    start >> task_create_tables >> task_insert_data >> end
